@@ -1,68 +1,198 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PJH Inclusion Morning Check-In</title>
-<style>
-body{font-family:Arial,sans-serif;background:#f4f6f9;margin:0;padding:30px}
-.container{max-width:500px;margin:auto;background:#fff;padding:25px;border-radius:12px;
-box-shadow:0 2px 10px rgba(0,0,0,.15)}
-h1{text-align:center}
-button{width:100%;padding:15px;margin:8px 0;font-size:18px;border:none;
-border-radius:8px;background:#1976d2;color:white;cursor:pointer}
-button:hover{background:#1565c0}
-.status{margin-top:20px;font-weight:bold;text-align:center;color:green}
-.small{margin-top:15px;font-size:13px;color:#666;text-align:center}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PJH Inclusion Morning Check-In</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f9;
+      margin: 0;
+      padding: 24px;
+      color: #222;
+    }
+
+    .container {
+      max-width: 520px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 26px;
+      border-radius: 16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,.12);
+      text-align: center;
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 1.9rem;
+    }
+
+    h2 {
+      margin-bottom: 8px;
+      font-size: 1.45rem;
+    }
+
+    .date {
+      color: #666;
+      margin-bottom: 22px;
+    }
+
+    .user-card {
+      background: #f7f9fc;
+      border-radius: 12px;
+      padding: 18px;
+      margin: 18px 0;
+    }
+
+    .label {
+      font-size: .9rem;
+      color: #666;
+      margin-bottom: 6px;
+    }
+
+    .name {
+      font-size: 1.35rem;
+      font-weight: 700;
+    }
+
+    button {
+      width: 100%;
+      padding: 15px;
+      margin: 8px 0;
+      font-size: 1.05rem;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .name-button {
+      background: #1976d2;
+      color: white;
+    }
+
+    .continue-button {
+      background: #2e7d32;
+      color: white;
+    }
+
+    .change-button {
+      background: #777;
+      color: white;
+    }
+
+    .ready {
+      margin-top: 18px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #2e7d32;
+    }
+
+    .small {
+      margin-top: 18px;
+      font-size: .85rem;
+      color: #777;
+      line-height: 1.4;
+    }
+  </style>
 </head>
 <body>
-<div class="container">
-<h1>PJH Inclusion Team</h1>
-<p>Select your name once each morning.</p>
+  <div class="container">
+    <div id="selectionScreen">
+      <h1>☀️ Good Morning!</h1>
+      <h2>PJH Inclusion Team</h2>
+      <div class="date" id="selectionDate"></div>
+      <p>Select your name for today.</p>
 
-<div id="buttons">
-<button onclick="selectName('Deanna Watson')">Deanna Watson</button>
-<button onclick="selectName('Kaysha Spence')">Kaysha Spence</button>
-<button onclick="selectName('Melinda Dawes')">Melinda Dawes</button>
-</div>
+      <button class="name-button" onclick="selectName('Deanna Watson')">Deanna Watson</button>
+      <button class="name-button" onclick="selectName('Kaysha Spence')">Kaysha Spence</button>
+      <button class="name-button" onclick="selectName('Melinda Dawes')">Melinda Dawes</button>
+    </div>
 
-<div class="status" id="status"></div>
+    <div id="welcomeScreen" style="display:none;">
+      <h1 id="greeting">☀️ Good Morning!</h1>
+      <div class="date" id="welcomeDate"></div>
 
-<button onclick="changeName()" style="background:#777;">Change Name</button>
+      <div class="user-card">
+        <div class="label">Current User</div>
+        <div class="name" id="currentUser"></div>
+      </div>
 
-<div class="small">
-This page only remembers who is using the phone today.<br>
-It does not log attendance.
-</div>
-</div>
+      <button class="continue-button" onclick="continueForToday()">Continue</button>
+      <button class="change-button" onclick="changeUser()">Change User</button>
 
-<script>
-const KEY="PJH_Para_Name";
+      <div class="ready" id="readyMessage"></div>
 
-function selectName(name){
- localStorage.setItem(KEY,name);
- showStatus();
-}
+      <div class="small">
+        Your name is remembered only for today.<br>
+        This page does not log attendance.
+      </div>
+    </div>
+  </div>
 
-function changeName(){
- localStorage.removeItem(KEY);
- showStatus();
-}
+  <script>
+    const NAME_KEY = "PJH_Para_Name";
+    const DATE_KEY = "PJH_Para_Date";
 
-function showStatus(){
- const saved=localStorage.getItem(KEY);
- const status=document.getElementById("status");
- const buttons=document.getElementById("buttons");
- if(saved){
-   status.innerHTML="Signed in as:<br><strong>"+saved+"</strong>";
-   buttons.style.display="none";
- }else{
-   status.textContent="";
-   buttons.style.display="block";
- }
-}
-showStatus();
-</script>
+    function getTodayKey() {
+      const now = new Date();
+      return now.getFullYear() + "-" +
+        String(now.getMonth() + 1).padStart(2, "0") + "-" +
+        String(now.getDate()).padStart(2, "0");
+    }
+
+    function getFormattedDate() {
+      return new Date().toLocaleDateString("en-US", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+        year: "numeric"
+      });
+    }
+
+    function selectName(name) {
+      localStorage.setItem(NAME_KEY, name);
+      localStorage.setItem(DATE_KEY, getTodayKey());
+      showCorrectScreen();
+    }
+
+    function continueForToday() {
+      document.getElementById("readyMessage").textContent =
+        "✓ You are ready to scan classroom tags.";
+    }
+
+    function changeUser() {
+      localStorage.removeItem(NAME_KEY);
+      localStorage.removeItem(DATE_KEY);
+      document.getElementById("readyMessage").textContent = "";
+      showCorrectScreen();
+    }
+
+    function showCorrectScreen() {
+      const savedName = localStorage.getItem(NAME_KEY);
+      const savedDate = localStorage.getItem(DATE_KEY);
+      const today = getTodayKey();
+
+      document.getElementById("selectionDate").textContent = getFormattedDate();
+      document.getElementById("welcomeDate").textContent = getFormattedDate();
+
+      if (savedName && savedDate === today) {
+        document.getElementById("selectionScreen").style.display = "none";
+        document.getElementById("welcomeScreen").style.display = "block";
+        document.getElementById("currentUser").textContent = savedName;
+
+        const firstName = savedName.split(" ")[0];
+        document.getElementById("greeting").textContent =
+          "☀️ Good Morning, " + firstName + "!";
+      } else {
+        localStorage.removeItem(NAME_KEY);
+        localStorage.removeItem(DATE_KEY);
+        document.getElementById("selectionScreen").style.display = "block";
+        document.getElementById("welcomeScreen").style.display = "none";
+      }
+    }
+
+    showCorrectScreen();
+  </script>
 </body>
 </html>
